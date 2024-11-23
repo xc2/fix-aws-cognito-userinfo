@@ -3,7 +3,7 @@
   "scripts": {
     "wrangler": "pnpm --package wrangler@3.90.0 dlx wrangler",
     "dev": "pnpm wrangler dev",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "pnpm wrangler types"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
