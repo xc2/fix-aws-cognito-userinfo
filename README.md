@@ -1,30 +1,59 @@
 ## What's this?
 
-This is a Cloudflare Worker that intercepts AWS Cognito's [userinfo endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html).
+A Cloudflare Worker that enhances AWS Cognito's [userinfo endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html) compatibility with OpenID Connect standards.
 
-This casts `email_verified` and `phone_verified` attributes to `boolean` values - as opposed to the `string` values that AWS Cognito returns - to be compatible with OpenID Connect [Standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims).
+## What does it do
 
-## What's this for?
+This worker intercepts AWS Cognito's userinfo endpoint responses and transforms specific attributes to ensure OpenID Connect compliance:
 
-This makes AWS Cognito works well with libraries like [openidconnect-rs](https://github.com/ramosbugs/openidconnect-rs) and applications like [Proxmox VE](https://www.proxmox.com/en/proxmox-ve).
+- Converts `email_verified` from `string` to `boolean`
+- Converts `phone_verified` from `string` to `boolean`
 
-If you're integrating AWS Cognito with such libraries or applications, you might meet errors like
+These transformations ensure compatibility with the OpenID Connect [Standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims) specification.
+
+## Use Cases
+
+This worker will be useful when integrating AWS Cognito with:
+
+- [openidconnect-rs](https://github.com/ramosbugs/openidconnect-rs)
+- [Proxmox VE](https://www.proxmox.com/en/proxmox-ve)
+- Other systems requiring strict OpenID Connect compliance
+
+Without this worker, you might encounter errors like:
 
 ```shell
 pvedaemon[1234]: openid authentication failure; rhost=::ffff:100.88.111.216 msg=Failed to contact userinfo endpoint: Failed to parse server response
 ```
 
-This worker can help you fix this issue.
+## Prerequisites
 
-## How to use?
+Before deployment, ensure you have:
 
-### Requirements
+- An AWS Cognito user pool with a custom domain configured (Figure 1) 
+- The custom domain's DNS records managed in Cloudflare (Figure 2)
 
-1. You have set a custom domain for your AWS Cognito user pool.
-2. You manage the custom domain's DNS records with Cloudflare.
+## Instructions
 
-### Steps
+### Enable Proxy Status of the custom domain (Figure 2)
 
-1. Enable the "Proxy" status of the custom domain in Cloudflare.
-2. Deploy this worker to Cloudflare.
-3. Add a worker route to intercept the userinfo endpoint.
+- Log into your Cloudflare dashboard
+- Locate your custom domain record
+- Enable the "Proxy" status (orange cloud)
+
+### Deploy the Worker
+
+- Clone this repository
+- Deploy to Cloudflare Workers using Wrangler or the Cloudflare dashboard
+
+### Configure Worker Route (Figure 3)
+
+- [Add a Worker route](https://developers.cloudflare.com/workers/configuration/routing/routes/) to intercept the userinfo endpoint
+- Pattern: `your.custom-domain.com/oauth2/userInfo` which is the same as the `userinfo_endpoint` of your user pool's openid configuraiton.
+
+### Figures
+
+| | |
+| -- | -- |
+| 1 | ![image](https://github.com/user-attachments/assets/00f0bec7-4d1d-4aa3-9ca8-dc185b377a22) |
+| 2 | ![image](https://github.com/user-attachments/assets/f89e0aa2-fc13-48b4-8b2d-662352b70c4e) |
+| 3 | ![image](https://github.com/user-attachments/assets/1d58750d-e8cc-4c31-9258-f88699299e52) |
